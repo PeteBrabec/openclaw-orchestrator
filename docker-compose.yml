@@ -1,0 +1,9 @@
+services:
+  hedz:
+    build: .
+    container_name: hedz
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3456:3000"
+    environment:
+      - NODE_ENV=production
