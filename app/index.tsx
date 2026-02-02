@@ -61,7 +61,7 @@ function SetupPrompt() {
   const router = useRouter();
   
   return (
-    <View style={styles.setupContainer}>
+    <View style={styles.setupContainer} testID="setup-prompt">
       <Text style={styles.setupTitle}>Welcome to Hedz 🗣️</Text>
       <Text style={styles.setupText}>
         Configure your Hetzner API token to get started.
@@ -69,6 +69,7 @@ function SetupPrompt() {
       <TouchableOpacity 
         style={styles.setupButton}
         onPress={() => router.push('/settings')}
+        testID="configure-button"
       >
         <Text style={styles.setupButtonText}>Configure</Text>
       </TouchableOpacity>
@@ -152,6 +153,7 @@ export default function AgentListScreen() {
       <TouchableOpacity 
         style={styles.fab}
         onPress={() => router.push('/spawn')}
+        testID="spawn-button"
       >
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
@@ -159,6 +161,7 @@ export default function AgentListScreen() {
       <TouchableOpacity 
         style={styles.settingsButton}
         onPress={() => router.push('/settings')}
+        testID="settings-button"
       >
         <Text style={styles.settingsText}>⚙️</Text>
       </TouchableOpacity>

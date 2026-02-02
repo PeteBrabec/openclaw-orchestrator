@@ -1,8 +1,36 @@
 import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import { Credentials, TelegramBot } from '../types';
 
 const CREDENTIALS_KEY = 'hedz_credentials';
+
+// Cross-platform secure storage
+const storage = {
+  async getItem(key: string): Promise<string | null> {
+    if (Platform.OS === 'web') {
+      return localStorage.getItem(key);
+    } else {
+      const SecureStore = require('expo-secure-store');
+      return storage.getItem(key);
+    }
+  },
+  async setItem(key: string, value: string): Promise<void> {
+    if (Platform.OS === 'web') {
+      localStorage.setItem(key, value);
+    } else {
+      const SecureStore = require('expo-secure-store');
+      await storage.setItem(key, value);
+    }
+  },
+  async deleteItem(key: string): Promise<void> {
+    if (Platform.OS === 'web') {
+      localStorage.removeItem(key);
+    } else {
+      const SecureStore = require('expo-secure-store');
+      await storage.deleteItem(key);
+    }
+  }
+};
 
 interface CredentialsState {
   credentials: Credentials | null;
@@ -27,7 +55,7 @@ export const useCredentialsStore = create<CredentialsState>((set, get) => ({
   loadCredentials: async () => {
     set({ isLoading: true });
     try {
-      const stored = await SecureStore.getItemAsync(CREDENTIALS_KEY);
+      const stored = await storage.getItem(CREDENTIALS_KEY);
       if (stored) {
         const credentials = JSON.parse(stored) as Credentials;
         set({ credentials, isInitialized: true });
@@ -45,7 +73,7 @@ export const useCredentialsStore = create<CredentialsState>((set, get) => ({
   saveCredentials: async (credentials: Credentials) => {
     set({ isLoading: true });
     try {
-      await SecureStore.setItemAsync(CREDENTIALS_KEY, JSON.stringify(credentials));
+      await storage.setItem(CREDENTIALS_KEY, JSON.stringify(credentials));
       set({ credentials });
     } catch (error) {
       console.error('Failed to save credentials:', error);
@@ -80,7 +108,7 @@ export const useCredentialsStore = create<CredentialsState>((set, get) => ({
   
   clearCredentials: async () => {
     try {
-      await SecureStore.deleteItemAsync(CREDENTIALS_KEY);
+      await storage.deleteItem(CREDENTIALS_KEY);
       set({ credentials: null });
     } catch (error) {
       console.error('Failed to clear credentials:', error);

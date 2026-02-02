@@ -1,0 +1,15 @@
+services:
+  test:
+    image: mcr.microsoft.com/playwright:v1.58.1-jammy
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      - BASE_URL=https://hedz.pete.brabec.me
+      - HETZNER_TOKEN=${HETZNER_TOKEN}
+    command: >
+      bash -c "
+        npm install --include=dev --legacy-peer-deps &&
+        npx playwright test --reporter=list
+      "
+    network_mode: host

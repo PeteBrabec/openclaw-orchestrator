@@ -6,10 +6,26 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+
+// Cross-platform alert
+const showAlert = (title: string, message: string, buttons?: Array<{text: string, onPress?: () => void, style?: string}>) => {
+  if (Platform.OS === 'web') {
+    if (buttons && buttons.length > 1) {
+      const confirmed = window.confirm(`${title}\n\n${message}`);
+      if (confirmed && buttons[1]?.onPress) {
+        buttons[1].onPress();
+      }
+    } else {
+      window.alert(`${title}\n\n${message}`);
+    }
+  } else {
+    const { Alert } = require('react-native');
+    Alert.alert(title, message, buttons);
+  }
+};
 import { useRouter } from 'expo-router';
 import { useCredentialsStore } from '../src/store/credentials';
 
@@ -31,7 +47,7 @@ export default function SettingsScreen() {
   
   const handleSave = async () => {
     if (!hetznerToken.trim()) {
-      Alert.alert('Error', 'Hetzner API token is required');
+      showAlert('Error', 'Hetzner API token is required');
       return;
     }
     
@@ -59,12 +75,12 @@ export default function SettingsScreen() {
       
       router.back();
     } catch (error) {
-      Alert.alert('Error', 'Failed to save credentials');
+      showAlert('Error', 'Failed to save credentials');
     }
   };
   
   const handleRemoveBot = (name: string) => {
-    Alert.alert(
+    showAlert(
       'Remove Bot',
       `Remove ${name}?`,
       [
@@ -103,6 +119,7 @@ export default function SettingsScreen() {
             secureTextEntry
             autoCapitalize="none"
             autoCorrect={false}
+            testID="hetzner-token-input"
           />
           <Text style={styles.hint}>
             Create at: Hetzner Console → Project → Security → API Tokens
@@ -173,6 +190,7 @@ export default function SettingsScreen() {
           style={[styles.saveButton, isLoading && styles.saveButtonDisabled]}
           onPress={handleSave}
           disabled={isLoading}
+          testID="save-button"
         >
           <Text style={styles.saveButtonText}>
             {isLoading ? 'Saving...' : 'Save'}

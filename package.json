@@ -8,7 +8,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build:web": "expo export -p web",
-    "serve": "npx serve dist"
+    "serve": "npx serve dist",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "expo": "~54.0.33",
@@ -27,6 +29,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@playwright/test": "^1.58.1",
     "@types/react": "~19.1.0",
     "typescript": "^5.9.3"
   },

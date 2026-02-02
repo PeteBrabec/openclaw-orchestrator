@@ -5,10 +5,28 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   ActivityIndicator,
   Linking,
+  Platform,
 } from 'react-native';
+
+// Cross-platform alert
+const showAlert = (title: string, message: string, buttons?: Array<{text: string, onPress?: () => void, style?: string}>) => {
+  if (Platform.OS === 'web') {
+    if (buttons && buttons.length > 1) {
+      const confirmed = window.confirm(`${title}\n\n${message}`);
+      if (confirmed && buttons[1]?.onPress) {
+        buttons[1].onPress();
+      }
+    } else {
+      window.alert(`${title}\n\n${message}`);
+      if (buttons && buttons[0]?.onPress) buttons[0].onPress();
+    }
+  } else {
+    const { Alert } = require('react-native');
+    showAlert(title, message, buttons);
+  }
+};
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAgentsStore } from '../../src/store/agents';
 
@@ -47,7 +65,7 @@ export default function AgentDetailScreen() {
   }[agent.status] || '#6b7280';
   
   const handleReboot = () => {
-    Alert.alert(
+    showAlert(
       'Reboot Agent',
       `Are you sure you want to reboot ${agent.name}?`,
       [
@@ -58,9 +76,9 @@ export default function AgentDetailScreen() {
             setIsRebooting(true);
             try {
               await rebootAgent(agent.serverId);
-              Alert.alert('Success', 'Agent is rebooting');
+              showAlert('Success', 'Agent is rebooting');
             } catch (error) {
-              Alert.alert('Error', error instanceof Error ? error.message : 'Failed to reboot');
+              showAlert('Error', error instanceof Error ? error.message : 'Failed to reboot');
             } finally {
               setIsRebooting(false);
             }
@@ -71,7 +89,7 @@ export default function AgentDetailScreen() {
   };
   
   const handleDestroy = () => {
-    Alert.alert(
+    showAlert(
       'Destroy Agent',
       `Are you sure you want to permanently destroy ${agent.name}? This cannot be undone.`,
       [
@@ -83,11 +101,11 @@ export default function AgentDetailScreen() {
             setIsDestroying(true);
             try {
               await destroyAgent(agent.serverId);
-              Alert.alert('Success', 'Agent destroyed', [
+              showAlert('Success', 'Agent destroyed', [
                 { text: 'OK', onPress: () => router.back() },
               ]);
             } catch (error) {
-              Alert.alert('Error', error instanceof Error ? error.message : 'Failed to destroy');
+              showAlert('Error', error instanceof Error ? error.message : 'Failed to destroy');
               setIsDestroying(false);
             }
           },

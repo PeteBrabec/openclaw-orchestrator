@@ -6,11 +6,21 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
 } from 'react-native';
+
+// Cross-platform alert
+const showAlert = (title: string, message: string, buttons?: Array<{text: string, onPress?: () => void}>) => {
+  if (Platform.OS === 'web') {
+    window.alert(`${title}\n\n${message}`);
+    if (buttons && buttons[0]?.onPress) buttons[0].onPress();
+  } else {
+    const { Alert } = require('react-native');
+    showAlert(title, message, buttons);
+  }
+};
 import { useRouter } from 'expo-router';
 import { useCredentialsStore } from '../src/store/credentials';
 import { useAgentsStore } from '../src/store/agents';
@@ -54,12 +64,12 @@ export default function SpawnScreen() {
   
   const handleSpawn = async () => {
     if (!name.trim()) {
-      Alert.alert('Error', 'Agent name is required');
+      showAlert('Error', 'Agent name is required');
       return;
     }
     
     if (!anthropicKey.trim()) {
-      Alert.alert('Error', 'Anthropic API key is required');
+      showAlert('Error', 'Anthropic API key is required');
       return;
     }
     
@@ -74,13 +84,13 @@ export default function SpawnScreen() {
         telegramBotToken: telegramBotToken.trim() || undefined,
       });
       
-      Alert.alert(
+      showAlert(
         'Agent Spawning',
         `${name} is being created. It may take 2-3 minutes to become available.`,
         [{ text: 'OK', onPress: () => router.back() }]
       );
     } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to spawn agent');
+      showAlert('Error', error instanceof Error ? error.message : 'Failed to spawn agent');
     } finally {
       setIsSpawning(false);
     }
