@@ -1,79 +1,120 @@
 import { test, expect } from '@playwright/test';
 
-// Test credentials
 const HETZNER_TOKEN = process.env.HETZNER_TOKEN || 'ueoZKqtplTZiHq6NaCvJMzXxGoxiNp8EXF9MtmeFAnczOHY3PWpbQzjm6hsLouba';
 
-test.describe('Hedz App', () => {
-  
-  test.beforeEach(async ({ page }) => {
-    // Clear localStorage before each test
+test.describe('Hedz App - Full Flow', () => {
+
+  test('Complete user journey', async ({ page }) => {
+    // 1. Clear state and load app
     await page.goto('/');
     await page.evaluate(() => localStorage.clear());
-  });
-
-  test('1. App loads successfully', async ({ page }) => {
-    await page.goto('/');
-    
-    // Wait for the app to render (looking for any text that indicates app loaded)
-    // React Native Web uses div elements
+    await page.reload();
     await page.waitForLoadState('networkidle');
     
-    // Take screenshot for debugging
-    await page.screenshot({ path: '/tmp/hedz-test-1.png' });
+    // 2. Verify welcome screen
+    console.log('Step 1: Checking welcome screen...');
+    await expect(page.getByText('Welcome to Hedz')).toBeVisible({ timeout: 10000 });
+    await page.screenshot({ path: '/tmp/step1-welcome.png' });
     
-    // Check page has content (not just loading)
-    const bodyContent = await page.locator('body').textContent();
-    console.log('Page content:', bodyContent?.substring(0, 500));
+    // 3. Click Configure
+    console.log('Step 2: Clicking Configure...');
+    await page.getByText('Configure').last().click();
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: '/tmp/step2-settings.png' });
     
-    // Should have some text content
-    expect(bodyContent?.length).toBeGreaterThan(10);
-  });
-
-  test('2. Welcome screen appears for new users', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    // 4. Verify settings screen
+    console.log('Step 3: Verifying settings screen...');
+    await expect(page.getByText('Hetzner Cloud')).toBeVisible({ timeout: 5000 });
     
-    // Look for "Welcome" or "Hedz" text
-    const hasWelcome = await page.getByText('Welcome').isVisible().catch(() => false);
-    const hasHedz = await page.getByText('Hedz').isVisible().catch(() => false);
-    const hasConfigure = await page.getByText('Configure').first().isVisible().catch(() => false);
+    // 5. Fill Hetzner token
+    console.log('Step 4: Filling Hetzner token...');
+    const inputs = page.locator('input');
+    const inputCount = await inputs.count();
+    console.log(`Found ${inputCount} input fields`);
     
-    console.log('hasWelcome:', hasWelcome, 'hasHedz:', hasHedz, 'hasConfigure:', hasConfigure);
+    // Find the Hetzner token input (first one)
+    const tokenInput = inputs.first();
+    await tokenInput.click();
+    await tokenInput.fill(HETZNER_TOKEN);
+    await page.screenshot({ path: '/tmp/step3-filled.png' });
     
-    // At least one should be visible
-    expect(hasWelcome || hasHedz || hasConfigure).toBeTruthy();
-  });
-
-  test('3. Can save credentials', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    // 6. Click Save
+    console.log('Step 5: Clicking Save...');
+    await page.getByText('Save').click();
+    await page.waitForTimeout(1000);
+    await page.screenshot({ path: '/tmp/step4-saved.png' });
     
-    // Click on Configure text (first match)
-    const configureButton = page.getByText('Configure').first();
-    if (await configureButton.isVisible()) {
-      await configureButton.click();
-      await page.waitForTimeout(1000);
-    }
-    
-    // Look for input field
-    const tokenInput = page.locator('input').first();
-    if (await tokenInput.isVisible()) {
-      await tokenInput.fill(HETZNER_TOKEN);
-      
-      // Look for Save button
-      const saveButton = page.getByText('Save');
-      if (await saveButton.isVisible()) {
-        await saveButton.click();
-        await page.waitForTimeout(2000);
-      }
-    }
-    
-    // After save, check localStorage
+    // 7. Verify credentials are saved
+    console.log('Step 6: Verifying localStorage...');
     const stored = await page.evaluate(() => localStorage.getItem('hedz_credentials'));
-    console.log('Stored credentials:', stored ? 'yes' : 'no');
-    
-    // Credentials should be stored
+    console.log('Stored:', stored ? 'YES' : 'NO');
     expect(stored).toBeTruthy();
+    
+    // 8. Verify we're on agent list (should see + button or empty state)
+    console.log('Step 7: Verifying agent list...');
+    await page.waitForTimeout(1000);
+    const hasSpawnButton = await page.getByText('+').isVisible().catch(() => false);
+    const hasEmptyState = await page.getByText('No agents yet').isVisible().catch(() => false);
+    const hasAgents = await page.getByText('running').isVisible().catch(() => false);
+    
+    console.log(`Spawn button: ${hasSpawnButton}, Empty state: ${hasEmptyState}, Has agents: ${hasAgents}`);
+    await page.screenshot({ path: '/tmp/step5-list.png' });
+    
+    expect(hasSpawnButton || hasEmptyState || hasAgents).toBeTruthy();
+    
+    // 9. Test persistence - reload and verify still logged in
+    console.log('Step 8: Testing persistence...');
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
+    
+    // Should NOT see welcome screen
+    const welcomeVisible = await page.getByText('Welcome to Hedz').isVisible().catch(() => false);
+    console.log(`Welcome visible after reload: ${welcomeVisible}`);
+    expect(welcomeVisible).toBeFalsy();
+    
+    await page.screenshot({ path: '/tmp/step6-reloaded.png' });
+    
+    // 10. Open settings and verify token is there
+    console.log('Step 9: Verifying settings persistence...');
+    await page.getByText('⚙️').click();
+    await page.waitForTimeout(500);
+    
+    const savedToken = await inputs.first().inputValue();
+    console.log(`Token preserved: ${savedToken === HETZNER_TOKEN}`);
+    expect(savedToken).toBe(HETZNER_TOKEN);
+    
+    await page.screenshot({ path: '/tmp/step7-settings-persisted.png' });
+    
+    console.log('✅ All steps passed!');
+  });
+
+  test('Spawn screen loads correctly', async ({ page }) => {
+    // Setup: save credentials first
+    await page.goto('/');
+    await page.evaluate((token) => {
+      localStorage.setItem('hedz_credentials', JSON.stringify({
+        hetznerToken: token,
+        anthropicKey: '',
+        telegramBots: []
+      }));
+    }, HETZNER_TOKEN);
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+    
+    // Click spawn button
+    console.log('Clicking spawn button...');
+    await page.getByText('+').click();
+    await page.waitForTimeout(500);
+    
+    // Verify spawn screen elements
+    await expect(page.getByText('Agent Identity')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('Infrastructure')).toBeVisible();
+    await expect(page.getByText('Falkenstein')).toBeVisible();
+    await expect(page.getByText('🚀 Spawn Agent')).toBeVisible();
+    
+    await page.screenshot({ path: '/tmp/spawn-screen.png' });
+    console.log('✅ Spawn screen loaded correctly');
   });
 
 });
