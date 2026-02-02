@@ -236,6 +236,87 @@ This could be a timing opportunity - the market is heating up for AI agents, but
 
 ---
 
+---
+
+## Category 5: Visual/Spatial Agent Simulations
+
+A separate category worth noting: visual environments where AI agents "live" and interact. Think virtual towns, Gather-like spaces, or game-like simulations.
+
+### Stanford Generative Agents (Smallville)
+- **URL**: https://github.com/joonspk-research/generative_agents
+- **Paper**: "Generative Agents: Interactive Simulacra of Human Behavior"
+- **What it does**: The original! 25 AI agents living in a Sims-like town, with memory, planning, and social behavior
+- **Tech**: Python, custom game engine
+- **Strengths**:
+  - Pioneering research (10k+ citations)
+  - Agents form relationships, remember events, plan activities
+  - Emergent social behaviors
+- **Gap for us**: Research project, not production tool. All agents share one simulation.
+
+### AI Town (a16z)
+- **URL**: https://github.com/a16z-infra/ai-town
+- **What it does**: Deployable starter kit for building your own AI town
+- **Tech**: Convex backend, PixiJS frontend, supports Ollama/OpenAI
+- **License**: MIT
+- **Strengths**:
+  - Actually deployable (unlike research code)
+  - Active community (Discord)
+  - Good documentation
+  - Supports local LLMs
+- **Gap for us**: Agents share one environment, no individual infrastructure per agent
+
+### Concordia (Google DeepMind)
+- **URL**: https://github.com/google-deepmind/concordia
+- **What it does**: Library for "generative social simulation" - like a game engine for AI agents
+- **Tech**: Python, modular architecture
+- **Strengths**:
+  - Google-backed
+  - Well-architected (components, prefabs, etc.)
+  - Good for research
+- **Gap for us**: Library for building simulations, not infrastructure management
+
+### AgentVerse (OpenBMB)
+- **URL**: https://github.com/OpenBMB/AgentVerse
+- **What it does**: Two frameworks - task-solving (multi-agent collaboration) and simulation (custom environments)
+- **Tech**: Python, supports various LLMs
+- **Demos**: NLP Classroom, Prisoner's Dilemma, Pokemon game
+- **Strengths**:
+  - Dual-purpose (tasks + simulation)
+  - HuggingFace space for demos
+  - ICLR 2024 paper
+- **Gap for us**: Shared simulation environment, not individual agent infrastructure
+
+### Gather.town (for reference)
+- **URL**: https://gather.town/
+- **What it does**: Virtual office/workspace where humans collaborate
+- **Note**: Not AI-focused, but the visual metaphor (spatial presence, "walk up and talk") is compelling for agent UIs
+
+---
+
+## Key Insight: Visual vs Infrastructure
+
+There are two distinct approaches emerging:
+
+| Approach | Focus | Examples | Our Position |
+|----------|-------|----------|--------------|
+| **Visual Simulation** | Agents in shared world | AI Town, Concordia | Not our focus |
+| **Infrastructure Orchestration** | Agents on separate infra | (none found) | **Our opportunity** |
+
+The visual simulation space is well-served by research projects and starter kits. But nobody is building tools for spawning and managing **independent agents on their own infrastructure**.
+
+Could there be a hybrid? A visual dashboard showing your fleet of agents, each running on separate VPS, with the ability to see them "walking around" a virtual space representing your infrastructure? 🤔
+
+---
+
+## Updated Recommendations
+
+1. **Don't compete with visual simulations** - AI Town etc. already do this well
+2. **Focus on infrastructure orchestration** - our unique angle
+3. **Consider visual dashboard layer** - borrow the "spatial presence" metaphor for fleet overview
+4. **Integration opportunity** - could deploy AI Town instances per-agent in the future
+
+---
+
 ## Sources
 - https://crewai.com/
 - https://www.langchain.com/langgraph
@@ -244,3 +325,8 @@ This could be a timing opportunity - the market is heating up for AI agents, but
 - https://www.agentops.ai/
 - https://github.com/justuseapen/solo-founder-fleet
 - https://github.com/agentic-dev-library/control
+- https://github.com/joonspk-research/generative_agents
+- https://github.com/a16z-infra/ai-town
+- https://github.com/google-deepmind/concordia
+- https://github.com/OpenBMB/AgentVerse
+- https://gather.town/
